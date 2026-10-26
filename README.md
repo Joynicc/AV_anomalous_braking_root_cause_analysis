@@ -1,4 +1,4 @@
-# Interaction Analysis of the Autonomous Shuttle with other road users
+# Interaction Analysis of an Autonomous Shuttle with Other Road Users During Anomalous Braking Events
 
 A computer-vision pipeline that turns roadside camera footage into **real-world trajectories** of cars, pedestrians and an autonomous shuttle, so you can explain _why_ the shuttle reacted the way it did, for example the cause of a sudden hard brake.
 
@@ -168,9 +168,9 @@ Open [`04_trajectory_analysis/trajectory_analysis.ipynb`](04_trajectory_analysis
 
 Example result (one row per nearby road user per second):
 
-| ts                  | object       | position    | distance_m |
-| ------------------- | ------------ | ----------- | ---------- |
-| 2022-10-27 17:10:50 | ('car', 45)  | in front of | 7.73       |
+| ts                  | object      | position    | distance_m |
+| ------------------- | ----------- | ----------- | ---------- |
+| 2022-10-27 17:10:50 | ('car', 45) | in front of | 7.73       |
 
 ---
 
