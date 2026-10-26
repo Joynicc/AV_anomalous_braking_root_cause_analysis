@@ -16,6 +16,7 @@ env/
 *.csv
 sample_input/
 runs/
+yolov7/
 
 # OS / editors
 .DS_Store

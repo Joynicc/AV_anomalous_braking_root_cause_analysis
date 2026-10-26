@@ -1,6 +1,6 @@
-# Vision-based Scene Analysis for Autonomous Shuttle Events
+# Interaction Analysis of the Autonomous Shuttle with other road users
 
-A computer-vision pipeline that turns roadside camera footage into **real-world trajectories** of cars, pedestrians and an autonomous shuttle, so you can explain *why* the shuttle reacted the way it did, for example the cause of a sudden hard brake.
+A computer-vision pipeline that turns roadside camera footage into **real-world trajectories** of cars, pedestrians and an autonomous shuttle, so you can explain _why_ the shuttle reacted the way it did, for example the cause of a sudden hard brake.
 
 The pipeline corrects lens distortion, detects and tracks road users with **YOLOv7 + SORT**, projects their pixel positions onto the road plane in **metres**, and analyses the resulting trajectories with **MovingPandas**.
 
@@ -28,13 +28,13 @@ The pipeline corrects lens distortion, detects and tracks road users with **YOLO
 
 ## How it works
 
-| Step | What happens | Output |
-|---|---|---|
-| **0. Event detection** *(not included)* | Anomalies such as hard brakes are found in the vehicle's speed data. | Timestamp of the event |
-| **1. Undistortion** | Camera intrinsics and distortion coefficients remove the wide-angle lens distortion. | Rectified video |
-| **2. Detection and tracking** | A custom YOLOv7 model detects `car`, `person` and `shuttle`; SORT gives each object a persistent ID. | One label file per frame |
-| **3. Coordinate mapping** | `solvePnP` on known ground points gives the camera pose; each detection is back-projected onto the road plane. | CSV with `x_3d`, `y_3d` in metres and timestamps |
-| **4. Trajectory analysis** | Trajectories are built and filtered (parked vs. moving cars) and the road users around the shuttle at the event time are reported. | Plots and relative positions/distances |
+| Step                                    | What happens                                                                                                                       | Output                                           |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **0. Event detection** _(not included)_ | Anomalies such as hard brakes are found in the vehicle's speed data.                                                               | Timestamp of the event                           |
+| **1. Undistortion**                     | Camera intrinsics and distortion coefficients remove the wide-angle lens distortion.                                               | Rectified video                                  |
+| **2. Detection and tracking**           | A custom YOLOv7 model detects `car`, `person` and `shuttle`; SORT gives each object a persistent ID.                               | One label file per frame                         |
+| **3. Coordinate mapping**               | `solvePnP` on known ground points gives the camera pose; each detection is back-projected onto the road plane.                     | CSV with `x_3d`, `y_3d` in metres and timestamps |
+| **4. Trajectory analysis**              | Trajectories are built and filtered (parked vs. moving cars) and the road users around the shuttle at the event time are reported. | Plots and relative positions/distances           |
 
 ---
 
@@ -86,8 +86,8 @@ cd 01_undistortion
 python undistort.py --input input_video.mp4 --output undistorted.mp4 --config ../config/camera.yaml
 ```
 
-| Before | After |
-|:---:|:---:|
+|                                  Before                                   |                                    After                                    |
+| :-----------------------------------------------------------------------: | :-------------------------------------------------------------------------: |
 | <img src="assets/undistort_before.png" alt="Original frame" width="100%"> | <img src="assets/undistort_after.png" alt="Undistorted frame" width="100%"> |
 
 ### 2. Object detection and tracking
@@ -100,7 +100,7 @@ cp 02_detection_tracking/detect_and_track.py 02_detection_tracking/sort.py yolov
 cd yolov7
 pip install -r ../02_detection_tracking/requirements.txt
 
-python detect_and_track.py --weights best.pt --source ../undistorted.mp4 \
+python detect_and_track.py --weights best.pt --source ../01_undistortion/undistorted.mp4 \
     --img-size 640 --conf-thres 0.6 --track --save-txt
 ```
 
@@ -118,8 +118,8 @@ Useful flags: `--show-track` draws trajectories, `--view-img` displays live resu
 
 **Model performance on the validation set:**
 
-| Precision–confidence curve | Confusion matrix |
-|:---:|:---:|
+|                        Precision–confidence curve                         |                              Confusion matrix                               |
+| :-----------------------------------------------------------------------: | :-------------------------------------------------------------------------: |
 | <img src="assets/precision_curve.png" alt="Precision curve" width="100%"> | <img src="assets/confusion_matrix.png" alt="Confusion matrix" width="100%"> |
 
 ### 3. Pixel to real-world coordinate mapping
@@ -130,8 +130,8 @@ To measure distances in metres, pixel coordinates are mapped onto the road plane
 2. **Extrinsics** (rotation and translation) relate the world to the camera. They are estimated with `cv2.solvePnP` from a few ground points whose positions are known in both the image and the real world, such as crosswalk stripe corners.
 3. Each detection's pixel `(u, v)` is back-projected as a ray and intersected with the ground plane `Z = 0`.
 
-| Camera model | World reference grid on the road (cm) |
-|:---:|:---:|
+|                                        Camera model                                        |                           World reference grid on the road (cm)                            |
+| :----------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------: |
 | <img src="assets/camera_model.png" alt="Intrinsic and extrinsic calibration" width="100%"> | <img src="assets/world_coordinate_grid.png" alt="Real-world Cartesian setup" width="100%"> |
 
 Arrange the outputs of step 2 like this (one sub-folder per video):
@@ -159,16 +159,18 @@ Open [`04_trajectory_analysis/trajectory_analysis.ipynb`](04_trajectory_analysis
 - builds a [MovingPandas](https://github.com/movingpandas/movingpandas) `TrajectoryCollection` per object,
 - splits cars into **parked** and **moving** by trajectory length,
 - plots the trajectories of people, moving cars and the shuttle,
-- lists every road user within a distance threshold of the shuttle around the event and says whether it is **in front of**, **behind** or **next to** the shuttle,
+- lists the moving cars within a distance threshold of the shuttle around the event and says whether each is **in front of**, **behind** or **next to** the shuttle,
 - plots speed along the trajectories.
 
 <p align="center">
   <img src="assets/trajectories.png" alt="Trajectories in real-world coordinates" width="100%">
 </p>
 
-```
-('car', 45) is in front of the shuttle, distance 7.73 m at 2022-10-27 17:10:50
-```
+Example result (one row per nearby road user per second):
+
+| ts                  | object       | position    | distance_m |
+| ------------------- | ------------ | ----------- | ---------- |
+| 2022-10-27 17:10:50 | ('car', 45)  | in front of | 7.73       |
 
 ---
 
@@ -185,9 +187,9 @@ Open [`04_trajectory_analysis/trajectory_analysis.ipynb`](04_trajectory_analysis
 
 ## Acknowledgements
 
-- [YOLOv7](https://github.com/WongKinYiu/yolov7): Wang, Bochkovskiy and Liao, *YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors*.
-- [SORT](https://github.com/abewley/sort): Bewley et al., *Simple Online and Realtime Tracking*, ICIP 2016.
-- [MovingPandas](https://github.com/movingpandas/movingpandas): Graser, *MovingPandas: Efficient Structures for Movement Data in Python*.
+- [YOLOv7](https://github.com/WongKinYiu/yolov7): Wang, Bochkovskiy and Liao, _YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors_.
+- [SORT](https://github.com/abewley/sort): Bewley et al., _Simple Online and Realtime Tracking_, ICIP 2016.
+- [MovingPandas](https://github.com/movingpandas/movingpandas): Graser, _MovingPandas: Efficient Structures for Movement Data in Python_.
 - [OpenCV](https://opencv.org/) for camera calibration and pose estimation.
 
 ## License

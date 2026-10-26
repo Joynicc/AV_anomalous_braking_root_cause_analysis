@@ -23,7 +23,7 @@ input folder layout (one sub-folder per video / "scene"):
     └── scene_2/ ...
 
 output: CSV with columns
-    classname, obj_id, classid, x, y, w, h, frame, scene, ts, x_px_coord, y_px_coord, x_3d, y_3d
+    classname, obj_id, classid, x, y, x2, y2, frame, scene, ts, x_px_coord, y_px_coord, x_3d, y_3d
 
 usage: python process_yolo_output.py --input-dir ./sample_input --fps 30 --config ../config/camera.yaml --output coords_3d.csv
 '''
@@ -33,7 +33,7 @@ def load_camera(config_path):
     with open(config_path, 'r') as f:
         cfg = yaml.safe_load(f)
     i = cfg['intrinsics']
-    K = np.array([[i['fx'], 0, i['cx']], [0, i['fy'], i['cy']], [0, 0, 1]], dtype=np.float64)
+    K = np.array([[i['fx'], 0, i['cx']], [0, i['fy'], i['cy']], [0, 0, 1]], dtype=np.float32)
     image_points = np.array(cfg['image_points'], dtype=np.float32)
     world_points = np.array(cfg['world_points'], dtype=np.float32)
     return K, image_points, world_points
@@ -63,9 +63,10 @@ def pixels_to_ground(u, v, K, rotation_matrix, translation_vector):
 
 
 def parse_start_time(text):
-    for fmt in ("%Y-%m-%d %H:%M:%S", "%H:%M:%S"):
+    """Returns the start time and the matching output format (same "HH:MM:SS.ff" style as before, plus the date if given)."""
+    for fmt, out_fmt in (("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"), ("%H:%M:%S", "%H:%M:%S.%f")):
         try:
-            return datetime.strptime(text, fmt)
+            return datetime.strptime(text, fmt), out_fmt
         except ValueError:
             pass
     raise ValueError(f"Unrecognised start time in ts.txt: '{text}'")
@@ -82,9 +83,9 @@ def read_yolo_txt(file_path):
             components = line.strip().split()
             if len(components) != 7:
                 continue
-            classname, obj_id, classid, x, y, w, h = components
+            classname, obj_id, classid, x, y, x2, y2 = components
             data.append([classname, int(float(obj_id)), int(float(classid)),
-                         float(x), float(y), float(w), float(h), frame])
+                         float(x), float(y), float(x2), float(y2), frame])
     return data
 
 
@@ -116,7 +117,7 @@ def process_yolo_output(input_dir, fps, config_path, units_per_metre=1000):
 
         # Read the start timestamp from ts.txt
         with open(ts_file_path, 'r') as ts_file:
-            start_timestamp = parse_start_time(ts_file.read().strip())
+            start_timestamp, ts_format = parse_start_time(ts_file.read().strip())
 
         rows = []
         for filename in os.listdir(label_folder_path):
@@ -125,11 +126,11 @@ def process_yolo_output(input_dir, fps, config_path, units_per_metre=1000):
         if not rows:
             continue
 
-        df = pd.DataFrame(rows, columns=['classname', 'obj_id', 'classid', 'x', 'y', 'w', 'h', 'frame'])
+        df = pd.DataFrame(rows, columns=['classname', 'obj_id', 'classid', 'x', 'y', 'x2', 'y2', 'frame'])
         df['scene'] = folder_name  # used to differentiate the videos
 
         # timestamp of each frame
-        df['ts'] = [start_timestamp + timedelta(seconds=f / fps) for f in df['frame']]
+        df['ts'] = [(start_timestamp + timedelta(seconds=f / fps)).strftime(ts_format)[:-4] for f in df['frame']]
 
         # normalised box centre -> pixel coordinates
         df['x_px_coord'] = df['x'] * framesize[0]
