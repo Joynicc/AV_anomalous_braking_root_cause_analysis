@@ -22,7 +22,6 @@ The pipeline corrects lens distortion, detects and tracks road users with **YOLO
   - [4. Spatio-temporal trajectory analysis](#4-spatio-temporal-trajectory-analysis)
 - [Adapting it to your own scene](#adapting-it-to-your-own-scene)
 - [Acknowledgements](#acknowledgements)
-- [License](#license)
 
 ---
 
