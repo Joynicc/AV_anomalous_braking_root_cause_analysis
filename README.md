@@ -56,7 +56,6 @@ The pipeline corrects lens distortion, detects and tracks road users with **YOLO
 │   └── camera.yaml                  # camera intrinsics, distortion, ground control points
 ├── assets/                          # images used in this README
 ├── requirements.txt
-└── LICENSE
 ```
 
 ---
