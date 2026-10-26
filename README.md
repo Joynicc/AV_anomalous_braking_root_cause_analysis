@@ -192,6 +192,4 @@ Example result (one row per nearby road user per second):
 - [MovingPandas](https://github.com/movingpandas/movingpandas): Graser, _MovingPandas: Efficient Structures for Movement Data in Python_.
 - [OpenCV](https://opencv.org/) for camera calibration and pose estimation.
 
-## License
 
-This project is licensed under the **GNU General Public License v3.0** (see [LICENSE](LICENSE)), the same license as YOLOv7 and SORT, whose code it builds on.
