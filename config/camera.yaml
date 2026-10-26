@@ -1,0 +1,41 @@
+# Camera calibration and ground-plane reference points.
+# Replace these example values with the ones for your own camera and scene.
+
+# Intrinsic parameters (pixels), e.g. from a checkerboard calibration
+# with cv2.calibrateCamera.
+intrinsics:
+  fx: 944.462
+  fy: 947.16
+  cx: 945.408
+  cy: 520.549
+
+# Distortion coefficients [k1, k2, p1, p2, k3]
+dist_coeffs: [-0.3558, 0.1898, 0.0018, -0.0040, -0.0610]
+
+# Ground control points used by cv2.solvePnP to estimate the camera pose.
+# Each image point (u, v) in the undistorted frame corresponds to the
+# world point at the same index (X, Y, Z) in millimetres, with Z = 0 on the
+# road plane. Use at least 4 non-collinear points; more gives a better fit.
+image_points:
+  - [369, 945]
+  - [425, 803]
+  - [590, 951]
+  - [448, 691]
+  - [478, 535]
+  - [251, 666]
+  - [1428, 725]
+  - [1553, 846]
+  - [1263, 596]
+  - [588, 335]
+
+world_points:
+  - [0, 0, 0]
+  - [0, 2000, 0]
+  - [2000, 0, 0]
+  - [0, 4000, 0]
+  - [0, 8000, 0]
+  - [-2000, 4000, 0]
+  - [23000, 8000, 0]
+  - [28000, 4000, 0]
+  - [23000, 12000, 0]
+  - [2000, 18000, 0]

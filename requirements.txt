@@ -1,0 +1,14 @@
+# Steps 1, 3 and 4 (undistortion, coordinate mapping, trajectory analysis).
+# Step 2 (YOLOv7 + SORT) has its own requirements in 02_detection_tracking/requirements.txt
+
+numpy
+opencv-python
+pandas
+pyyaml
+matplotlib
+geopandas
+shapely
+movingpandas
+holoviews
+hvplot
+jupyter
